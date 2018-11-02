@@ -1,21 +1,21 @@
 package com.alexstyl.specialdates.search
 
 import com.alexstyl.specialdates.contact.Contact
+import com.alexstyl.specialdates.contact.ContactsProvider
 import com.alexstyl.specialdates.events.peopleevents.PeopleEventsProvider
 import io.reactivex.Observable
 
-class PeopleSearch(private val peopleEventsProvider: PeopleEventsProvider,
+class PeopleSearch(private val contactsProvider: ContactsProvider,
                    private val nameComparator: NameMatcher) {
 
     fun searchForContacts(searchQuery: String): Observable<Set<Contact>> {
         return Observable.fromCallable {
-            peopleEventsProvider
-                    .fetchAllEventsInAYear()
-                    .asSequence()
+            contactsProvider
+                    .allContacts
                     .filter {
-                        nameComparator.match(it.contact.displayName, searchQuery)
+                        nameComparator.match(it.displayName, searchQuery)
                     }
-                    .map { it.contact }
+                    .sortedBy { it.givenName }
                     .toSet()
         }
     }
