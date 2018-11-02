@@ -4,17 +4,12 @@ import com.alexstyl.specialdates.PhoneticComparator
 import com.alexstyl.specialdates.TestDateLabelCreator
 import com.alexstyl.specialdates.contact.Contact
 import com.alexstyl.specialdates.contact.ContactSource
+import com.alexstyl.specialdates.contact.ContactsProvider
+import com.alexstyl.specialdates.contact.ContactsProviderSource
 import com.alexstyl.specialdates.contact.DisplayName
-import com.alexstyl.specialdates.date.ContactEvent
-import com.alexstyl.specialdates.date.Months.JANUARY
-import com.alexstyl.specialdates.date.dateOn
 import com.alexstyl.specialdates.events.namedays.NamedayUserSettings
 import com.alexstyl.specialdates.events.namedays.calendar.resource.NamedayCalendarProvider
-import com.alexstyl.specialdates.events.peopleevents.CompositePeopleEventsProvider
-import com.alexstyl.specialdates.events.peopleevents.PeopleEventsProvider
-import com.alexstyl.specialdates.events.peopleevents.StandardEventType
 import io.reactivex.Observable
-import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.schedulers.TestScheduler
 import io.reactivex.subjects.PublishSubject
@@ -30,7 +25,7 @@ class SearchPresenterTest {
 
     private lateinit var presenter: SearchPresenter
 
-    private val mockEventProvider = mock(PeopleEventsProvider::class.java)
+    private val mockContactsSource = mock(ContactsProviderSource::class.java)
     private val mockNamedayUserSettings = mock(NamedayUserSettings::class.java)
     private val mockNamedayCalendarProvider = mock(NamedayCalendarProvider::class.java)
     private val mockView = mock(SearchResultView::class.java)
@@ -40,7 +35,7 @@ class SearchPresenterTest {
     @Before
     fun setUp() {
         presenter = SearchPresenter(
-                PeopleSearch(mockEventProvider, NameMatcher),
+                PeopleSearch(ContactsProvider(mapOf(Pair(ContactSource.SOURCE_DEVICE, mockContactsSource))), NameMatcher),
                 SearchResultsViewModelFactory(TestDateLabelCreator.forUS()),
                 mockNamedayUserSettings,
                 mockNamedayCalendarProvider,
@@ -56,13 +51,13 @@ class SearchPresenterTest {
     fun givenSubsequentTextChanges_thenOnlyTheLastOneGetsDelivered() {
         val searchQueryObservable = PublishSubject.create<String>()
         given(mockView.searchQueryObservable).willReturn(searchQueryObservable)
-        given(mockEventProvider.fetchAllEventsInAYear()).willReturn(
+        given(mockContactsSource.allContacts).willReturn(
                 listOf(
-                        aContactEvent.copy(contact = aContact.copy(contactID = 0, displayName = DisplayName.from("text1"))),
-                        aContactEvent.copy(contact = aContact.copy(contactID = 1, displayName = DisplayName.from("text2"))),
-                        aContactEvent.copy(contact = aContact.copy(contactID = 2, displayName = DisplayName.from("text3"))),
-                        aContactEvent.copy(contact = aContact.copy(contactID = 3, displayName = DisplayName.from("text4"))),
-                        aContactEvent.copy(contact = aContact.copy(contactID = 4, displayName = DisplayName.from("text5")))
+                        aContact.copy(contactID = 0, displayName = DisplayName.from("text1")),
+                        aContact.copy(contactID = 1, displayName = DisplayName.from("text2")),
+                        aContact.copy(contactID = 2, displayName = DisplayName.from("text3")),
+                        aContact.copy(contactID = 3, displayName = DisplayName.from("text4")),
+                        aContact.copy(contactID = 4, displayName = DisplayName.from("text5"))
                 ))
 
         presenter.presentInto(mockView)
@@ -79,7 +74,7 @@ class SearchPresenterTest {
     fun givenASearchQuery_thenTheContactWithThatNameIsReturned() {
         val searchQueryObservable = PublishSubject.create<String>()
         given(mockView.searchQueryObservable).willReturn(searchQueryObservable)
-        given(mockEventProvider.fetchAllEventsInAYear()).willReturn(listOf(aContactEvent.copy(contact = aContact.called("Alex"))))
+        given(mockContactsSource.allContacts).willReturn(listOf(aContact.called("Alex")))
 
         presenter.presentInto(mockView)
         testScheduler.triggerActions()
@@ -94,7 +89,6 @@ class SearchPresenterTest {
 
     companion object {
         val aContact = Contact(-1, DisplayName.from(""), "", ContactSource.SOURCE_DEVICE)
-        val aContactEvent = ContactEvent(StandardEventType.BIRTHDAY, dateOn(1, JANUARY, 2017), aContact, null)
     }
 
     private fun Contact.called(name: String): Contact {

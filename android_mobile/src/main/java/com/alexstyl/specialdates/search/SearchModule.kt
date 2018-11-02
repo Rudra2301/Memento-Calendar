@@ -2,6 +2,7 @@ package com.alexstyl.specialdates.search
 
 import com.alexstyl.specialdates.PhoneticComparator
 import com.alexstyl.specialdates.Strings
+import com.alexstyl.specialdates.contact.Contact
 import com.alexstyl.specialdates.contact.ContactsProvider
 import com.alexstyl.specialdates.date.DateLabelCreator
 import com.alexstyl.specialdates.date.todaysDate
@@ -32,7 +33,7 @@ class SearchModule {
     }
 
     @Provides
-    fun peopleEventsSearch(contactsProvider: PeopleEventsProvider): PeopleSearch {
+    fun peopleEventsSearch(contactsProvider: ContactsProvider): PeopleSearch {
         return PeopleSearch(contactsProvider, NameMatcher)
     }
 

@@ -42,7 +42,6 @@ class AddEventActivity : ThemedMementoActivity(), Listener, OnEventDatePickedLis
 
     @Inject lateinit var presenter: AddEventsPresenter
     @Inject lateinit var permissionChecker: MementoPermissions
-    @Inject lateinit var uriFilePathProvider: UriFilePathProvider
     @Inject lateinit var analytics: Analytics
     @Inject lateinit var imageLoader: ImageLoader
     @Inject lateinit var tracker: CrashAndErrorTracker
@@ -68,10 +67,13 @@ class AddEventActivity : ThemedMementoActivity(), Listener, OnEventDatePickedLis
 
         eventsView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         eventsView.setHasFixedSize(true)
+
         val adapter = ContactEventsAdapter(contactDetailsListener)
         eventsView.adapter = adapter
 
+
         avatarView.setOnClickListener {
+
             if (avatarView.isDisplayingAvatar) {
                 if (permissionChecker.canReadExternalStorage()) {
                     BottomSheetPicturesDialog

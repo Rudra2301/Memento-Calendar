@@ -1,24 +1,21 @@
 package com.alexstyl.specialdates.search
 
 import com.alexstyl.specialdates.contact.Contact
-import com.alexstyl.specialdates.contact.ContactFixture
-import com.alexstyl.specialdates.contact.ContactSource.SOURCE_DEVICE
+import com.alexstyl.specialdates.contact.ContactSource
 import com.alexstyl.specialdates.contact.ContactsProvider
 import com.alexstyl.specialdates.contact.ContactsProviderSource
 import com.alexstyl.specialdates.contact.DisplayName
 import com.alexstyl.specialdates.date.ContactEvent
 import com.alexstyl.specialdates.date.Months.JANUARY
 import com.alexstyl.specialdates.date.dateOn
-import com.alexstyl.specialdates.events.peopleevents.EventType
-import com.alexstyl.specialdates.events.peopleevents.PeopleEventsProvider
 import com.alexstyl.specialdates.events.peopleevents.StandardEventType
 import org.fest.assertions.api.Assertions.assertThat
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
+import org.mockito.Mockito
 import org.mockito.runners.MockitoJUnitRunner
 
 @RunWith(MockitoJUnitRunner::class)
@@ -26,17 +23,18 @@ class PeopleSearchTest {
 
     private lateinit var search: PeopleSearch
     @Mock
-    private lateinit var mockContactSource: PeopleEventsProvider
+    val mockContactsSource = Mockito.mock(ContactsProviderSource::class.java)
 
     @Before
     fun setUp() {
-        search = PeopleSearch(mockContactSource, NameMatcher)
-        given(mockContactSource.fetchAllEventsInAYear()).willReturn(
+        search = PeopleSearch(ContactsProvider(mapOf(Pair(ContactSource.SOURCE_DEVICE, mockContactsSource))), NameMatcher)
+        given(mockContactsSource.allContacts).willReturn(
                 listOf(
-                        ContactEvent(StandardEventType.BIRTHDAY, aDate, aContact.copy(displayName = DisplayName.from("Alex Styl"))),
-                        ContactEvent(StandardEventType.BIRTHDAY, aDate, aContact.copy(displayName = DisplayName.from("Maria Papadopoulou")), null),
-                        ContactEvent(StandardEventType.BIRTHDAY, aDate, aContact.copy(displayName = DisplayName.from("Mimoza Dereks")), null)
-                ))
+                        aContact.copy(displayName = DisplayName.from("Alex Styl")),
+                        aContact.copy(displayName = DisplayName.from("Maria Papadopoulou")),
+                        aContact.copy(displayName = DisplayName.from("Mimoza Dereks")))
+        )
+
     }
 
     @Test
@@ -69,6 +67,5 @@ class PeopleSearchTest {
 
     companion object {
         private val aContact = Contact(0, DisplayName.from("A contact"), "", 0)
-        private val aDate = dateOn(1, JANUARY, 2018)
     }
 }
